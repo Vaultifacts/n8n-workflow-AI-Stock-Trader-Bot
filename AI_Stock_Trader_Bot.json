@@ -11,8 +11,8 @@
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.2,
       "position": [
-        -944,
-        896
+        -1088,
+        656
       ],
       "id": "ee944ce7-c880-4fb6-b5f1-a0bbf38a8c3e",
       "name": "TelegramInputTrigger",
@@ -26,13 +26,13 @@
     },
     {
       "parameters": {
-        "jsCode": "for (const item of items) {\n  const messageText = item.json.message.text;\n  item.json.symbol = messageText.trim().toUpperCase();\n}\nreturn items;"
+        "jsCode": "// Get all input items from upstream (e.g., Telegram trigger)\nconst items = $input.all();\n\n// Defensive check: If no items, return an empty item with default symbol\nif (items.length === 0) {\n  return [\n    {\n      json: {\n        symbol: ''  // Default empty to avoid downstream errors\n      }\n    }\n  ];\n}\n\n// Process each item\nfor (const item of items) {\n  // Defensive check: Ensure message.text exists\n  const messageText = item.json?.message?.text || '';  // Fallback to empty string if missing\n  item.json.symbol = messageText.trim().toUpperCase();  // Trim and uppercase (e.g., \" tsla \" -> \"TSLA\")\n}\n\n// Return the updated items\nreturn items;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -720,
-        896
+        -640,
+        656
       ],
       "id": "c44ea853-4c02-4f75-99ae-ce7fa38a80e9",
       "name": "NormalizeInputText"
@@ -44,8 +44,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -496,
-        896
+        -416,
+        656
       ],
       "id": "7991cb42-1101-4982-8688-12077c00a1dc",
       "name": "ParseSymbolsToArray"
@@ -57,8 +57,8 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        -272,
-        896
+        -192,
+        656
       ],
       "id": "e5c5bc2f-fbf7-48ae-b629-12f1cdef083b",
       "name": "LoopValidateSymbols",
@@ -70,14 +70,14 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict",
+            "typeValidation": "loose",
             "version": 3
           },
           "conditions": [
             {
               "id": "fefb87f7-aceb-42e9-9cae-dcb77038dbbf",
-              "leftValue": "={{$node[\"NormalizeInputText\"].json[\"symbol\"]}}",
-              "rightValue": "=/^([A-Z]{1,5}(\\.[A-Z]{1,2})?(,\\s*)?)+$/",
+              "leftValue": "={{ $node[\"NormalizeInputText\"].item.json[\"symbol\"] }}",
+              "rightValue": "=/^([A-Z]{1,5}(\\\\.[A-Z]{1,2})?(,\\\\s*)?)+$/",
               "operator": {
                 "type": "string",
                 "operation": "regex"
@@ -86,13 +86,14 @@
           ],
           "combinator": "and"
         },
+        "looseTypeValidation": true,
         "options": {}
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -48,
-        752
+        32,
+        608
       ],
       "id": "03fb5f7c-89a9-41e0-b630-ec4eda5b0825",
       "name": "CheckSymbolRegex"
@@ -103,7 +104,7 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict",
+            "typeValidation": "loose",
             "version": 3
           },
           "conditions": [
@@ -119,13 +120,14 @@
           ],
           "combinator": "and"
         },
+        "looseTypeValidation": true,
         "options": {}
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        400,
-        688
+        704,
+        432
       ],
       "id": "3a83cf7a-e45c-4e91-8fd1-143207af141d",
       "name": "CheckSymbolAPIResult"
@@ -136,8 +138,8 @@
       "name": "AddRateLimitWait",
       "typeVersion": 1,
       "position": [
-        -48,
-        944
+        32,
+        800
       ],
       "id": "56c78d1c-43e0-4586-9ee9-74137d204299"
     },
@@ -146,56 +148,23 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        624,
-        640
+        928,
+        384
       ],
       "id": "23aa3d12-fc66-4161-96a7-7216300cbf65",
       "name": "MergeValidationResults"
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "eacb433c-cda6-48f6-b159-125aad5f006a",
-              "leftValue": "={{$node[\"Function\"].json[\"errorString\"].length}}",
-              "rightValue": 0,
-              "operator": {
-                "type": "number",
-                "operation": "gt"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        912,
-        672
-      ],
-      "id": "a54833ff-a09d-416b-8063-f33157f01169",
-      "name": "CheckForErrors"
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $('TelegramInputTrigger').item.json.message.chat.id }}",
+        "chatId": "={{ $('TelegramInputTrigger').first().json.message.chat.id }}",
         "text": "Invalid stock symbol provided. Please enter a valid ticker (e.g., AAPL) and try again.",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        800,
-        992
+        1520,
+        592
       ],
       "id": "ca8ea928-3eed-4445-9beb-189679976d0d",
       "name": "SendErrorMessage",
@@ -209,13 +178,13 @@
     },
     {
       "parameters": {
-        "jsCode": "// Initialize arrays for valid symbols and errors\nlet validSymbols = [];\nlet errors = [];\n\n// Iterate over incoming items to categorize\nfor (const item of items) {\n  if (item.json.status === 'valid' || !item.json.errors) {  // Assuming 'status' field from validation\n    validSymbols.push(item.json.symbol);\n  } else if (item.json.errors) {\n    errors = errors.concat(item.json.errors);  // Merge error arrays if batched\n  }\n}\n\n// Attach compiled data to the first item for downstream use\nitems[0].json.validSymbols = validSymbols;\nitems[0].json.errorString = errors.length > 0 \n  ? `Invalid symbols: ${errors.join(', ')}. Proceeding with valid ones: ${validSymbols.join(', ')}.` \n  : '';\n\n// Return a single item to simplify flow (or keep all if needed)\nreturn [items[0]];"
+        "jsCode": "// Get all input items from upstream (e.g., from ValidateSymbolTwelveData)\nconst items = $input.all();\n\n// Defensive check: If no items, return default output\nif (items.length === 0) {\n  return [\n    {\n      json: {\n        validSymbols: [],\n        errorString: 'No input items received. Check upstream nodes.'\n      }\n    }\n  ];\n}\n\n// Initialize arrays\nlet validSymbols = [];\nlet errors = [];\n\n// Process each item\nfor (const item of items) {\n  // Defensive check: Ensure item.json exists\n  if (!item.json) {\n    errors.push('Item missing json data');\n    continue;\n  }\n\n  // Fallback to nested API structure for symbol (from your API output: data[0].symbol)\n  const symbol = item.json.symbol || item.json.data?.[0]?.symbol || item.json.search_symbol || '';  // Fallback chain\n  const normalizedSymbol = symbol.toUpperCase().trim();\n\n  // Skip if no symbol found (prevents \"missing symbol\" for empty items)\n  if (!normalizedSymbol) {\n    // Optional: Comment out the push if you don't want to log empty items\n    // errors.push('Item missing symbol');\n    continue;  // Skip to next item\n  }\n\n  // Check if valid (based on API \"status\": \"ok\" from your API output)\n  if (item.json.status === 'ok' || !item.json.errors || item.json.errors.length === 0) {\n    validSymbols.push(normalizedSymbol);\n  } else if (Array.isArray(item.json.errors) && item.json.errors.length > 0) {\n    errors = errors.concat(item.json.errors);\n  } else {\n    errors.push('Unexpected item structure or API error: ' + (item.json.message || 'Unknown'));\n  }\n}\n\n// Remove duplicates from validSymbols\nvalidSymbols = [...new Set(validSymbols)];\n\n// Build errorString only if there are errors\nconst errorString = errors.length > 0\n  ? `Invalid symbols or issues: ${errors.join(', ')}. Proceeding with valid ones: ${validSymbols.join(', ') || 'None'}.`\n  : '';\n\n// Return single item output\nreturn [\n  {\n    json: {\n      validSymbols: validSymbols,\n      errorString: errorString\n    }\n  }\n];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        848,
-        448
+        1152,
+        320
       ],
       "id": "76c29c83-58a7-41cd-a6b7-ff5e346808be",
       "name": "FormatValidSymbols"
@@ -223,12 +192,14 @@
     {
       "parameters": {
         "url": "https://api.twelvedata.com/time_series",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
             {
               "name": "symbol",
-              "value": "={{ $json.message.text }}"
+              "value": "={{$json.validSymbols[0]}}"
             },
             {
               "name": "interval",
@@ -249,21 +220,29 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1296,
-        -160
+        2048,
+        -144
       ],
       "id": "44b8434a-1cea-44d8-be23-c105d2b7331e",
-      "name": "Fetch1MinTimeSeries"
+      "name": "Fetch1MinTimeSeries",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "srLxuSkG3qoi2f8B",
+          "name": "TwelveDataAPI"
+        }
+      }
     },
     {
       "parameters": {
         "url": "https://api.twelvedata.com/time_series",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
             {
               "name": "symbol",
-              "value": "={{ $json.message.text }}"
+              "value": "={{$json.validSymbols[0]}}"
             },
             {
               "name": "interval",
@@ -284,21 +263,29 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1296,
-        320
+        2048,
+        48
       ],
       "id": "07adb778-4fcd-42a5-ac59-0472379738ef",
-      "name": "Fetch15MinTimeSeries"
+      "name": "Fetch15MinTimeSeries",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "srLxuSkG3qoi2f8B",
+          "name": "TwelveDataAPI"
+        }
+      }
     },
     {
       "parameters": {
         "url": "https://api.twelvedata.com/time_series",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
             {
               "name": "symbol",
-              "value": "={{ $json.message.text }}"
+              "value": "={{$json.validSymbols[0]}}"
             },
             {
               "name": "interval",
@@ -319,11 +306,17 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1296,
-        512
+        2048,
+        336
       ],
       "id": "bab7ba61-76f8-4630-b824-6816c3513945",
-      "name": "Fetch1HourTimeSeries"
+      "name": "Fetch1HourTimeSeries",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "srLxuSkG3qoi2f8B",
+          "name": "TwelveDataAPI"
+        }
+      }
     },
     {
       "parameters": {
@@ -334,16 +327,28 @@
         "queryParameters": {
           "parameters": [
             {
-              "name": "q",
-              "value": "={{ $json.message.text }}"
+              "name": "qInTitle",
+              "value": "={{ $json.validSymbols[0] }}"
             },
             {
               "name": "from",
-              "value": "={{ $today.minus({days: 1}) .toFormat('yyyy-MM-dd')}}"
+              "value": "={{ new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }}"
             },
             {
               "name": "apikey",
               "value": "23bf725d79954f49b5dcbfce35f52cbe"
+            },
+            {
+              "name": "language",
+              "value": "en"
+            },
+            {
+              "name": "sortBy",
+              "value": "publishedAt"
+            },
+            {
+              "name": "pageSize",
+              "value": "5"
             }
           ]
         },
@@ -352,58 +357,38 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1296,
-        704
+        2480,
+        368
       ],
       "id": "f4647b7f-86a4-40cd-b12a-7a1062aba507",
       "name": "FetchNewsArticles",
       "credentials": {
         "httpQueryAuth": {
-          "id": "srLxuSkG3qoi2f8B",
-          "name": "Query Auth account"
+          "id": "qTO2AXW1jyzkqDKZ",
+          "name": "NewsAPI"
+        },
+        "httpHeaderAuth": {
+          "id": "Dm2QVIWXvdZ37UmD",
+          "name": "Header Auth account"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "// Initialize or append to an error array\nif (!items[0].json.errors) {\n  items[0].json.errors = [];\n}\nitems[0].json.errors.push($item.json.symbol + ' is invalid');\nreturn items;"
+        "jsCode": "// Get all input items from upstream (e.g., invalid symbols from validation)\nconst items = $input.all();\n\n// Defensive check: If no items, return a default item with empty errors\nif (items.length === 0) {\n  return [\n    {\n      json: {\n        errors: []  // Empty array to avoid downstream errors\n      }\n    }\n  ];\n}\n\n// Use the first item as the aggregator (your original approach)\nconst aggregator = items[0];\n\n// Defensive check: Ensure aggregator has json and errors array\nif (!aggregator.json) {\n  aggregator.json = {};  // Create if missing\n}\nif (!Array.isArray(aggregator.json.errors)) {\n  aggregator.json.errors = [];  // Initialize if missing or not array\n}\n\n// Process each item (original line 5 fixed)\nfor (const item of items) {\n  // Defensive check: Skip if item.json or symbol is missing\n  if (!item.json || typeof item.json.symbol === 'undefined') {\n    continue;  // Skip this item gracefully (or add a default: aggregator.json.errors.push('Unknown invalid symbol'))\n  }\n\n  // Append the invalid symbol message\n  aggregator.json.errors.push(item.json.symbol + ' is invalid');\n}\n\n// Return only the aggregator item (single item output)\nreturn [aggregator];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        448,
-        1216
+        928,
+        704
       ],
       "id": "4c27d041-c82f-47f3-9f41-dd58cee7afa3",
       "name": "CollectInvalidSymbol"
     },
     {
       "parameters": {
-        "options": {}
-      },
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [
-        960,
-        160
-      ],
-      "id": "84a11e2d-49ca-4c56-8604-e9f271137d9f",
-      "name": "LoopProcessValidSymbols"
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.noOp",
-      "name": "AddRateLimitWait1",
-      "typeVersion": 1,
-      "position": [
-        784,
-        -48
-      ],
-      "id": "2a187bc6-ad2a-446f-90ab-446c9dc0d99a"
-    },
-    {
-      "parameters": {
-        "url": "=https://api.twelvedata.com/symbol_search?symbol={{$item.json[\"symbol\"]}}&outputsize=1",
+        "url": "=https://api.twelvedata.com/symbol_search?symbol={{$json.symbol}}&outputsize=1",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpQueryAuth",
         "sendQuery": true,
@@ -420,8 +405,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        176,
-        688
+        256,
+        432
       ],
       "id": "b139043d-d7f4-4f3b-aea5-e879fb2ce833",
       "name": "ValidateSymbolTwelveData",
@@ -439,8 +424,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1584,
-        304
+        2480,
+        64
       ],
       "id": "e5910da5-66eb-44eb-b588-ef9c47a209a1",
       "name": "MergeTimeSeriesData"
@@ -453,21 +438,21 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        1872,
-        320
+        2704,
+        80
       ],
       "id": "7ba9c8e8-d4dc-44e7-887e-f6627407e676",
       "name": "AggregateDataIntervals"
     },
     {
       "parameters": {
-        "jsCode": "const root = items[0].json;\n\n//extract datasets\nconst data1m = root.data[0];\n//1min\nconst data15m = root.data[1];\n//15min\nconst data1h = root.data[2];\n//1h\n\n//standardize format\nfunction normalize(values) {\n  return values\n    .map(v => ({\n      time: new Date(v.datetime),\n      open: parseFloat(v.open),\n      high: parseFloat(v.high),\n      low: parseFloat(v.low),\n      close:parseFloat(v.close),\n      volume:parseFloat(v.volume),\n    }))\n    .sort((a, b) => a.time - b.time);\n}\n\nreturn [\n  {\n    json: {\n      ticker:data1m.meta.symbol,\n      candles1m:normalize(data1m.values),\n      candles15m:normalize(data15m.values),\n      candles1h:normalize(data1h.values),\n    }\n  }\n];\n  "
+        "jsCode": "// Get all input items (n8n passes data as 'items')\nconst items = $input.all();  // Use $input.all() for safety in n8n Code nodes\n\n// Defensive check: Ensure there is at least one item with json data\nif (items.length === 0 || !items[0].json) {\n  return [\n    {\n      json: {\n        error: 'No input data provided. Check upstream nodes (e.g., API request) for valid output.'\n      }\n    }\n  ];\n}\n\n// Extract root JSON from the first item\nconst root = items[0].json;\n\n// Defensive check: Ensure root.data exists and has at least 3 arrays\nif (!root.data || !Array.isArray(root.data) || root.data.length < 3) {\n  return [\n    {\n      json: {\n        error: 'Invalid data structure. Expected root.data to be an array with at least 3 timeframe datasets.'\n      }\n    }\n  ];\n}\n\n// Extract datasets with checks\nconst data1m = root.data[0] || {};  // Default to empty object if missing\nconst data15m = root.data[1] || {};\nconst data1h = root.data[2] || {};\n\n// Defensive check: Ensure data1m has meta and symbol (this prevents the TypeError)\nif (!data1m.meta || typeof data1m.meta.symbol === 'undefined') {\n  return [\n    {\n      json: {\n        error: 'Missing meta or symbol in 1min data. Verify API response from Twelve Data or upstream node.'\n      }\n    }\n  ];\n}\n\n// Standardize format function (unchanged, but add check inside for empty values)\nfunction normalize(values) {\n  if (!Array.isArray(values) || values.length === 0) {\n    return [];  // Return empty array if no values, to avoid errors in mapping\n  }\n  return values\n    .map(v => ({\n      time: new Date(v.datetime),\n      open: parseFloat(v.open),\n      high: parseFloat(v.high),\n      low: parseFloat(v.low),\n      close: parseFloat(v.close),\n      volume: parseFloat(v.volume),\n    }))\n    .sort((a, b) => a.time - b.time);\n}\n\n// Now safely process and return the output\nreturn [\n  {\n    json: {\n      ticker: data1m.meta.symbol,  // Safe now due to earlier check\n      candles1m: normalize(data1m.values),\n      candles15m: normalize(data15m.values),\n      candles1h: normalize(data1h.values),\n    }\n  }\n];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2096,
-        320
+        2992,
+        80
       ],
       "id": "f26c2700-627a-4c09-8597-21de6611042b",
       "name": "ComputeTechnicalIndicators"
@@ -489,8 +474,8 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        1520,
-        928
+        2928,
+        384
       ],
       "id": "08af3dc7-d832-427c-8f21-eef0de6b403b",
       "name": "AnalyzeNewsSentimentChain"
@@ -503,8 +488,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
       "typeVersion": 1,
       "position": [
-        1600,
-        1152
+        3008,
+        608
       ],
       "id": "554924eb-c979-4ddc-8539-49ca41e1fc3a",
       "name": "GrokSentimentModel",
@@ -520,8 +505,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2320,
-        736
+        3488,
+        128
       ],
       "id": "a380b1a7-36a3-4cf0-a087-328939433798",
       "name": "MergeSentimentResults"
@@ -534,8 +519,8 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        2544,
-        736
+        3712,
+        128
       ],
       "id": "1962b459-4565-4451-84c2-7baa28b136e2",
       "name": "AggregateSentimentScores"
@@ -543,16 +528,16 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=You are an expert day trader. Using the data below, please give a single, unified trade recommendation -Buy, Sell, or Hold-based on both price action (1m, 15m, 1h candles) and 24h sentiment. Then provide:\n\n- Technical Recommendation (Buy, Sell, or Hold; Incorporating candle analysis and sentiment)\n- Entry Price\n- Stop-Loss\n- Target/Exit Price\n\nProvide your answer as plain text with bullet points and clear line breaks.\n\nTechnical Data (candles):\n{{ JSON.stringify($json.data[0]) }}\n\nSentiment Analysis (Past 24h):\n{{ JSON.stringify($json.data[1]) }}\n\nEach candle object has:\n- timeframe: \"1m\", \"15m\", or \"1h\"\n- candles: [openTime, open, high, low, close, volume, ...]\n\nSteps for the agent:\n1. Group candles by timeframe (1m, 15m, 1h).\n2. Use 1m & 15m action + indicators (RSI, MACD, Trendlines) for optimal entry.\n3. Confirm trend with 1h data.\n4. Factor in sentiment to refine the Buy/Sell/Hold call.\n\n### Response format (no extra text!):\n- Technical Recommendation: <BUY|SELL|HOLD>\n- Entry Price: <number>\n- Stop-Loss: <number>\n- Target/Exit Price: <number>",
+        "text": "=You are an expert day trader. Using the data below, please give a single, unified trade recommendation -Buy, Sell, or Hold-based on both price action (1m, 15m, 1h candles) and 24h sentiment. Then provide:\n\n- Ticker Symbol\n- Technical Recommendation (Buy, Sell, or Hold; Incorporating candle analysis and sentiment)\n- Entry Price\n- Stop-Loss\n- Target/Exit Price\n\nProvide your answer as plain text with bullet points and clear line breaks.\n\nTechnical Data (candles):\n{{ JSON.stringify($json.data[0]) }}\n\nSentiment Analysis (Past 24h):\n{{ JSON.stringify($json.data[1]) }}\n\nEach candle object has:\n- timeframe: \"1m\", \"15m\", or \"1h\"\n- candles: [openTime, open, high, low, close, volume, ...]\n\nSteps for the agent:\n1. Group candles by timeframe (1m, 15m, 1h).\n2. Use 1m & 15m action + indicators (RSI, MACD, Trendlines) for optimal entry.\n3. Confirm trend with 1h data.\n4. Factor in sentiment to refine the Buy/Sell/Hold call.\n\n### Response format (no extra text!):\n- Technical Recommendation: <BUY|SELL|HOLD>\n- Entry Price: <number>\n- Stop-Loss: <number>\n- Target/Exit Price: <number>",
         "options": {
-          "systemMessage": "You are an expert day trader. ONLY output exactly the lines below-no rationale, no extra commentary.\n\n### Response format (absolutely no other text!)\n- Technical Recommendation: <BUY|SELL|HOLD>\n- Entry Price: <number or N/A>\n- Stop-Loss: <number or N/A>\n- Target/Exit: <number or N/A>\n- Hold or Exit Decision: <Hold|Exit>"
+          "systemMessage": "You are an expert day trader. ONLY output exactly the lines below-no rationale, no extra commentary.\n\n### Response format (absolutely no other text!)\n- Ticker Symbol: <string>\n- Technical Recommendation: <BUY|SELL|HOLD>\n- Entry Price: <number or N/A>\n- Stop-Loss: <number or N/A>\n- Target/Exit: <number or N/A>\n- Hold or Exit Decision: <Hold|Exit>"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        2768,
-        736
+        3936,
+        128
       ],
       "id": "aaae121d-601b-4cba-8a99-9e96657d7e3d",
       "name": "GenerateTradeRecommendationAgent"
@@ -565,8 +550,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
       "typeVersion": 1,
       "position": [
-        2848,
-        960
+        4016,
+        352
       ],
       "id": "1911db9c-dce1-4ce1-9dbf-e2c0f0c79069",
       "name": "GrokRecommendationModel",
@@ -580,14 +565,14 @@
     {
       "parameters": {
         "chatId": "={{ $('TelegramInputTrigger').item.json.message.chat.id }}",
-        "text": "={{ $json.output }}",
+        "text": "={{$json.output}}",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        3120,
-        736
+        4288,
+        128
       ],
       "id": "fbac985f-c858-4956-b418-a83ae4240650",
       "name": "SendTradeRecommendation",
@@ -606,12 +591,139 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [
-        1296,
-        1424
+        2496,
+        560
       ],
       "id": "cf6de127-2578-4504-8e0d-60869941ec37",
       "name": "HandleIncomingChatMessage",
       "webhookId": "c7edf6a6-a06a-4b0f-b2e7-b5edc108f3e2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f921eb93-b7e9-454d-ad33-fe796ea3c633",
+              "name": "inputSymbol",
+              "value": "={{ $json.symbol }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        32,
+        384
+      ],
+      "id": "e3552212-5e5f-4df8-a9de-df62d8e82f54",
+      "name": "PreserveSymbol"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8d25f461-3c1b-4e68-bf02-933896a04cf4",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "This message was sent automatically with n8n",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -864,
+        576
+      ],
+      "id": "2e56eafb-f70a-4abd-a6e3-1179b4ffa8a0",
+      "name": "FilterBotMessages"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        432
+      ],
+      "id": "d2a1863b-7b9c-4005-a00c-28e9abf739d0",
+      "name": "RateLimitWait",
+      "webhookId": "4dfa7b44-1e06-4b3e-8590-a6914c110e99"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2464,
+        -144
+      ],
+      "id": "186d7c11-52ff-44a0-8dcf-44849400e9e5",
+      "name": "RateLimit1Min",
+      "webhookId": "c617d089-7f02-4969-9929-7b0002a40908"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2256,
+        48
+      ],
+      "id": "7157be21-2af9-460d-8d16-740b3a7da8ea",
+      "name": "RateLimit15Min",
+      "webhookId": "0a81b84f-fc73-4cf6-8761-d25bf08fec83"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2256,
+        336
+      ],
+      "id": "59cbc95b-5485-4f07-b627-69b723834efe",
+      "name": "RateLimit1Hr",
+      "webhookId": "609b0d97-84ee-4d13-8dd2-39207fddfca0"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2704,
+        368
+      ],
+      "id": "6c0d75b0-a9ff-4d45-b825-9d180ebe56bd",
+      "name": "RateLimitNews",
+      "webhookId": "2f0e746f-6175-401d-b06b-2c050ebeddb8"
     }
   ],
   "pinData": {},
@@ -619,6 +731,11 @@
     "TelegramInputTrigger": {
       "main": [
         [
+          {
+            "node": "FilterBotMessages",
+            "type": "main",
+            "index": 0
+          },
           {
             "node": "NormalizeInputText",
             "type": "main",
@@ -656,6 +773,11 @@
             "node": "CheckSymbolRegex",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "PreserveSymbol",
+            "type": "main",
+            "index": 0
           }
         ],
         [
@@ -671,14 +793,14 @@
       "main": [
         [
           {
-            "node": "ValidateSymbolTwelveData",
+            "node": "CollectInvalidSymbol",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "CollectInvalidSymbol",
+            "node": "ValidateSymbolTwelveData",
             "type": "main",
             "index": 0
           }
@@ -725,39 +847,6 @@
         ]
       ]
     },
-    "CheckForErrors": {
-      "main": [
-        [
-          {
-            "node": "SendErrorMessage",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "FetchNewsArticles",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Fetch1HourTimeSeries",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Fetch15MinTimeSeries",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Fetch1MinTimeSeries",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "SendErrorMessage": {
       "main": [
         [
@@ -773,12 +862,22 @@
       "main": [
         [
           {
-            "node": "CheckForErrors",
+            "node": "Fetch1MinTimeSeries",
             "type": "main",
             "index": 0
           },
           {
-            "node": "LoopProcessValidSymbols",
+            "node": "Fetch15MinTimeSeries",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch1HourTimeSeries",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "FetchNewsArticles",
             "type": "main",
             "index": 0
           }
@@ -789,7 +888,7 @@
       "main": [
         [
           {
-            "node": "MergeTimeSeriesData",
+            "node": "RateLimit1Min",
             "type": "main",
             "index": 0
           }
@@ -800,9 +899,9 @@
       "main": [
         [
           {
-            "node": "MergeTimeSeriesData",
+            "node": "RateLimit15Min",
             "type": "main",
-            "index": 1
+            "index": 0
           }
         ]
       ]
@@ -811,9 +910,9 @@
       "main": [
         [
           {
-            "node": "MergeTimeSeriesData",
+            "node": "RateLimit1Hr",
             "type": "main",
-            "index": 2
+            "index": 0
           }
         ]
       ]
@@ -822,7 +921,7 @@
       "main": [
         [
           {
-            "node": "AnalyzeNewsSentimentChain",
+            "node": "RateLimitNews",
             "type": "main",
             "index": 0
           }
@@ -840,55 +939,11 @@
         ]
       ]
     },
-    "LoopProcessValidSymbols": {
-      "main": [
-        [
-          {
-            "node": "Fetch1MinTimeSeries",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Fetch15MinTimeSeries",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Fetch1HourTimeSeries",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "FetchNewsArticles",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "AddRateLimitWait1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AddRateLimitWait1": {
-      "main": [
-        [
-          {
-            "node": "LoopProcessValidSymbols",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "ValidateSymbolTwelveData": {
       "main": [
         [
           {
-            "node": "CheckSymbolAPIResult",
+            "node": "RateLimitWait",
             "type": "main",
             "index": 0
           }
@@ -1004,6 +1059,84 @@
           }
         ]
       ]
+    },
+    "PreserveSymbol": {
+      "main": [
+        [
+          {
+            "node": "ValidateSymbolTwelveData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FilterBotMessages": {
+      "main": [
+        [
+          {
+            "node": "NormalizeInputText",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "RateLimitWait": {
+      "main": [
+        [
+          {
+            "node": "CheckSymbolAPIResult",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RateLimit1Min": {
+      "main": [
+        [
+          {
+            "node": "MergeTimeSeriesData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RateLimit15Min": {
+      "main": [
+        [
+          {
+            "node": "MergeTimeSeriesData",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "RateLimit1Hr": {
+      "main": [
+        [
+          {
+            "node": "MergeTimeSeriesData",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "RateLimitNews": {
+      "main": [
+        [
+          {
+            "node": "AnalyzeNewsSentimentChain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -1013,11 +1146,11 @@
     "timeSavedMode": "fixed",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "d25bd15f-8e9f-439d-8cec-55686b0b3393",
+  "versionId": "ba26a305-c666-4334-9e75-ea1182931589",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "e528253e88e4586541d2eb06c1ec5fdac21c84cfb5afc416ee840c43e0960980"
   },
-  "id": "Gf8fWK0ca-4ij5vzKbo2_",
+  "id": "WcPP6HpwTVEUFdgu",
   "tags": []
 }
