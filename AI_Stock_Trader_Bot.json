@@ -11,11 +11,11 @@
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.2,
       "position": [
-        0,
-        96
+        -944,
+        896
       ],
       "id": "ee944ce7-c880-4fb6-b5f1-a0bbf38a8c3e",
-      "name": "Telegram Trigger",
+      "name": "TelegramInputTrigger",
       "webhookId": "fd100b2b-8fc2-4dbb-89d4-ef0b4f580178",
       "credentials": {
         "telegramApi": {
@@ -23,6 +23,202 @@
           "name": "DayTraderBotCredential"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of items) {\n  const messageText = item.json.message.text;\n  item.json.symbol = messageText.trim().toUpperCase();\n}\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        896
+      ],
+      "id": "c44ea853-4c02-4f75-99ae-ce7fa38a80e9",
+      "name": "NormalizeInputText"
+    },
+    {
+      "parameters": {
+        "jsCode": "let normalizedText = '';\n\n// Validate input structure\nif (items.length > 0 && items[0] && items[0].json && typeof items[0].json.symbol === 'string') {\n  normalizedText = items[0].json.symbol;\n} else {\n  // Debug log for missing data; can be removed in production\n  console.log('No valid symbol field found in input items');\n  return [];\n}\n\nconst symbols = normalizedText.split(',').map(s => s.trim()).filter(s => s.length > 0); // Split, trim, and filter empty entries\n\n// Create new items for each symbol\nreturn symbols.map(symbol => ({ json: { symbol } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -496,
+        896
+      ],
+      "id": "7991cb42-1101-4982-8688-12077c00a1dc",
+      "name": "ParseSymbolsToArray"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -272,
+        896
+      ],
+      "id": "e5c5bc2f-fbf7-48ae-b629-12f1cdef083b",
+      "name": "LoopValidateSymbols",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fefb87f7-aceb-42e9-9cae-dcb77038dbbf",
+              "leftValue": "={{$node[\"NormalizeInputText\"].json[\"symbol\"]}}",
+              "rightValue": "=/^([A-Z]{1,5}(\\.[A-Z]{1,2})?(,\\s*)?)+$/",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -48,
+        752
+      ],
+      "id": "03fb5f7c-89a9-41e0-b630-ec4eda5b0825",
+      "name": "CheckSymbolRegex"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c61eb9ff-6361-4bea-874f-2c9edbad4430",
+              "leftValue": "={{$node[\"ValidateSymbolTwelveData\"].json[\"data\"].length}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        400,
+        688
+      ],
+      "id": "3a83cf7a-e45c-4e91-8fd1-143207af141d",
+      "name": "CheckSymbolAPIResult"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "AddRateLimitWait",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        944
+      ],
+      "id": "56c78d1c-43e0-4586-9ee9-74137d204299"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        624,
+        640
+      ],
+      "id": "23aa3d12-fc66-4161-96a7-7216300cbf65",
+      "name": "MergeValidationResults"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "eacb433c-cda6-48f6-b159-125aad5f006a",
+              "leftValue": "={{$node[\"Function\"].json[\"errorString\"].length}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        912,
+        672
+      ],
+      "id": "a54833ff-a09d-416b-8063-f33157f01169",
+      "name": "CheckForErrors"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('TelegramInputTrigger').item.json.message.chat.id }}",
+        "text": "Invalid stock symbol provided. Please enter a valid ticker (e.g., AAPL) and try again.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        800,
+        992
+      ],
+      "id": "ca8ea928-3eed-4445-9beb-189679976d0d",
+      "name": "SendErrorMessage",
+      "webhookId": "c0f03da0-d6a3-4848-9ffd-9e3351f3eb08",
+      "credentials": {
+        "telegramApi": {
+          "id": "SEtfhHTHn4V1lCk0",
+          "name": "DayTraderBotCredential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Initialize arrays for valid symbols and errors\nlet validSymbols = [];\nlet errors = [];\n\n// Iterate over incoming items to categorize\nfor (const item of items) {\n  if (item.json.status === 'valid' || !item.json.errors) {  // Assuming 'status' field from validation\n    validSymbols.push(item.json.symbol);\n  } else if (item.json.errors) {\n    errors = errors.concat(item.json.errors);  // Merge error arrays if batched\n  }\n}\n\n// Attach compiled data to the first item for downstream use\nitems[0].json.validSymbols = validSymbols;\nitems[0].json.errorString = errors.length > 0 \n  ? `Invalid symbols: ${errors.join(', ')}. Proceeding with valid ones: ${validSymbols.join(', ')}.` \n  : '';\n\n// Return a single item to simplify flow (or keep all if needed)\nreturn [items[0]];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        448
+      ],
+      "id": "76c29c83-58a7-41cd-a6b7-ff5e346808be",
+      "name": "FormatValidSymbols"
     },
     {
       "parameters": {
@@ -53,11 +249,11 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        224,
-        -176
+        1296,
+        -160
       ],
       "id": "44b8434a-1cea-44d8-be23-c105d2b7331e",
-      "name": "HTTP 1m"
+      "name": "Fetch1MinTimeSeries"
     },
     {
       "parameters": {
@@ -88,11 +284,11 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        224,
-        16
+        1296,
+        320
       ],
       "id": "07adb778-4fcd-42a5-ac59-0472379738ef",
-      "name": "HTTP 15m"
+      "name": "Fetch15MinTimeSeries"
     },
     {
       "parameters": {
@@ -123,55 +319,17 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        224,
-        208
+        1296,
+        512
       ],
       "id": "bab7ba61-76f8-4630-b824-6816c3513945",
-      "name": "HTTP 1h"
-    },
-    {
-      "parameters": {
-        "numberInputs": 3
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        448,
-        0
-      ],
-      "id": "e5910da5-66eb-44eb-b588-ef9c47a209a1",
-      "name": "Merge"
-    },
-    {
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        672,
-        16
-      ],
-      "id": "7ba9c8e8-d4dc-44e7-887e-f6627407e676",
-      "name": "Aggregate"
-    },
-    {
-      "parameters": {
-        "jsCode": "const root = items[0].json;\n\n//extract datasets\nconst data1m = root.data[0];\n//1min\nconst data15m = root.data[1];\n//15min\nconst data1h = root.data[2];\n//1h\n\n//standardize format\nfunction normalize(values) {\n  return values\n    .map(v => ({\n      time: new Date(v.datetime),\n      open: parseFloat(v.open),\n      high: parseFloat(v.high),\n      low: parseFloat(v.low),\n      close:parseFloat(v.close),\n      volume:parseFloat(v.volume),\n    }))\n    .sort((a, b) => a.time - b.time);\n}\n\nreturn [\n  {\n    json: {\n      ticker:data1m.meta.symbol,\n      candles1m:normalize(data1m.values),\n      candles15m:normalize(data15m.values),\n      candles1h:normalize(data1h.values),\n    }\n  }\n];\n  "
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        960,
-        16
-      ],
-      "id": "f26c2700-627a-4c09-8597-21de6611042b",
-      "name": "Code in JavaScript"
+      "name": "Fetch1HourTimeSeries"
     },
     {
       "parameters": {
         "url": "https://newsapi.org/v2/everything",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -194,36 +352,125 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        672,
-        352
+        1296,
+        704
       ],
       "id": "f4647b7f-86a4-40cd-b12a-7a1062aba507",
-      "name": "HTTP Request"
+      "name": "FetchNewsArticles",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "srLxuSkG3qoi2f8B",
+          "name": "Query Auth account"
+        }
+      }
     },
     {
-      "parameters": {},
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
+      "parameters": {
+        "jsCode": "// Initialize or append to an error array\nif (!items[0].json.errors) {\n  items[0].json.errors = [];\n}\nitems[0].json.errors.push($item.json.symbol + ' is invalid');\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
-        1248,
-        288
+        448,
+        1216
       ],
-      "id": "a380b1a7-36a3-4cf0-a087-328939433798",
-      "name": "Merge1"
+      "id": "4c27d041-c82f-47f3-9f41-dd58cee7afa3",
+      "name": "CollectInvalidSymbol"
     },
     {
       "parameters": {
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
-      "typeVersion": 1.4,
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
       "position": [
-        672,
-        544
+        960,
+        160
       ],
-      "id": "cf6de127-2578-4504-8e0d-60869941ec37",
-      "name": "When chat message received",
-      "webhookId": "c7edf6a6-a06a-4b0f-b2e7-b5edc108f3e2"
+      "id": "84a11e2d-49ca-4c56-8604-e9f271137d9f",
+      "name": "LoopProcessValidSymbols"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "AddRateLimitWait1",
+      "typeVersion": 1,
+      "position": [
+        784,
+        -48
+      ],
+      "id": "2a187bc6-ad2a-446f-90ab-446c9dc0d99a"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.twelvedata.com/symbol_search?symbol={{$item.json[\"symbol\"]}}&outputsize=1",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "03b82e9068bf43118f3b04858762bf49"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        176,
+        688
+      ],
+      "id": "b139043d-d7f4-4f3b-aea5-e879fb2ce833",
+      "name": "ValidateSymbolTwelveData",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "srLxuSkG3qoi2f8B",
+          "name": "Query Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1584,
+        304
+      ],
+      "id": "e5910da5-66eb-44eb-b588-ef9c47a209a1",
+      "name": "MergeTimeSeriesData"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1872,
+        320
+      ],
+      "id": "7ba9c8e8-d4dc-44e7-887e-f6627407e676",
+      "name": "AggregateDataIntervals"
+    },
+    {
+      "parameters": {
+        "jsCode": "const root = items[0].json;\n\n//extract datasets\nconst data1m = root.data[0];\n//1min\nconst data15m = root.data[1];\n//15min\nconst data1h = root.data[2];\n//1h\n\n//standardize format\nfunction normalize(values) {\n  return values\n    .map(v => ({\n      time: new Date(v.datetime),\n      open: parseFloat(v.open),\n      high: parseFloat(v.high),\n      low: parseFloat(v.low),\n      close:parseFloat(v.close),\n      volume:parseFloat(v.volume),\n    }))\n    .sort((a, b) => a.time - b.time);\n}\n\nreturn [\n  {\n    json: {\n      ticker:data1m.meta.symbol,\n      candles1m:normalize(data1m.values),\n      candles15m:normalize(data15m.values),\n      candles1h:normalize(data1h.values),\n    }\n  }\n];\n  "
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2096,
+        320
+      ],
+      "id": "f26c2700-627a-4c09-8597-21de6611042b",
+      "name": "ComputeTechnicalIndicators"
     },
     {
       "parameters": {
@@ -242,11 +489,11 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        896,
-        448
+        1520,
+        928
       ],
       "id": "08af3dc7-d832-427c-8f21-eef0de6b403b",
-      "name": "Basic LLM Chain"
+      "name": "AnalyzeNewsSentimentChain"
     },
     {
       "parameters": {
@@ -256,17 +503,28 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
       "typeVersion": 1,
       "position": [
-        976,
-        672
+        1600,
+        1152
       ],
       "id": "554924eb-c979-4ddc-8539-49ca41e1fc3a",
-      "name": "xAI Grok Chat Model",
+      "name": "GrokSentimentModel",
       "credentials": {
         "xAiApi": {
           "id": "LnJS5l9C6NoeRvcL",
           "name": "xAi account"
         }
       }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2320,
+        736
+      ],
+      "id": "a380b1a7-36a3-4cf0-a087-328939433798",
+      "name": "MergeSentimentResults"
     },
     {
       "parameters": {
@@ -276,11 +534,11 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        1472,
-        288
+        2544,
+        736
       ],
       "id": "1962b459-4565-4451-84c2-7baa28b136e2",
-      "name": "Aggregate1"
+      "name": "AggregateSentimentScores"
     },
     {
       "parameters": {
@@ -293,11 +551,11 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        1696,
-        288
+        2768,
+        736
       ],
       "id": "aaae121d-601b-4cba-8a99-9e96657d7e3d",
-      "name": "AI Agent"
+      "name": "GenerateTradeRecommendationAgent"
     },
     {
       "parameters": {
@@ -307,11 +565,11 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
       "typeVersion": 1,
       "position": [
-        1776,
-        512
+        2848,
+        960
       ],
       "id": "1911db9c-dce1-4ce1-9dbf-e2c0f0c79069",
-      "name": "xAI Grok Chat Model1",
+      "name": "GrokRecommendationModel",
       "credentials": {
         "xAiApi": {
           "id": "LnJS5l9C6NoeRvcL",
@@ -321,18 +579,18 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "chatId": "={{ $('TelegramInputTrigger').item.json.message.chat.id }}",
         "text": "={{ $json.output }}",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        2048,
-        288
+        3120,
+        736
       ],
       "id": "fbac985f-c858-4956-b418-a83ae4240650",
-      "name": "Send a text message",
+      "name": "SendTradeRecommendation",
       "webhookId": "3a473a39-4dab-4d1a-bc56-9da99d0fdd63",
       "credentials": {
         "telegramApi": {
@@ -340,184 +598,407 @@
           "name": "DayTraderBotCredential"
         }
       }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        1296,
+        1424
+      ],
+      "id": "cf6de127-2578-4504-8e0d-60869941ec37",
+      "name": "HandleIncomingChatMessage",
+      "webhookId": "c7edf6a6-a06a-4b0f-b2e7-b5edc108f3e2"
     }
   ],
   "pinData": {},
   "connections": {
-    "Telegram Trigger": {
+    "TelegramInputTrigger": {
       "main": [
         [
           {
-            "node": "HTTP 1m",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "HTTP 15m",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "HTTP 1h",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "HTTP Request",
+            "node": "NormalizeInputText",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "HTTP 1m": {
+    "NormalizeInputText": {
       "main": [
         [
           {
-            "node": "Merge",
+            "node": "ParseSymbolsToArray",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "HTTP 15m": {
+    "ParseSymbolsToArray": {
       "main": [
         [
           {
-            "node": "Merge",
+            "node": "LoopValidateSymbols",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LoopValidateSymbols": {
+      "main": [
+        [
+          {
+            "node": "CheckSymbolRegex",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AddRateLimitWait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CheckSymbolRegex": {
+      "main": [
+        [
+          {
+            "node": "ValidateSymbolTwelveData",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CollectInvalidSymbol",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CheckSymbolAPIResult": {
+      "main": [
+        [
+          {
+            "node": "MergeValidationResults",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CollectInvalidSymbol",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AddRateLimitWait": {
+      "main": [
+        [
+          {
+            "node": "LoopValidateSymbols",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MergeValidationResults": {
+      "main": [
+        [
+          {
+            "node": "FormatValidSymbols",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CheckForErrors": {
+      "main": [
+        [
+          {
+            "node": "SendErrorMessage",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "FetchNewsArticles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch1HourTimeSeries",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch15MinTimeSeries",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch1MinTimeSeries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SendErrorMessage": {
+      "main": [
+        [
+          {
+            "node": "MergeValidationResults",
             "type": "main",
             "index": 1
           }
         ]
       ]
     },
-    "HTTP 1h": {
+    "FormatValidSymbols": {
       "main": [
         [
           {
-            "node": "Merge",
+            "node": "CheckForErrors",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "LoopProcessValidSymbols",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch1MinTimeSeries": {
+      "main": [
+        [
+          {
+            "node": "MergeTimeSeriesData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch15MinTimeSeries": {
+      "main": [
+        [
+          {
+            "node": "MergeTimeSeriesData",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Fetch1HourTimeSeries": {
+      "main": [
+        [
+          {
+            "node": "MergeTimeSeriesData",
             "type": "main",
             "index": 2
           }
         ]
       ]
     },
-    "Merge": {
+    "FetchNewsArticles": {
       "main": [
         [
           {
-            "node": "Aggregate",
+            "node": "AnalyzeNewsSentimentChain",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Aggregate": {
+    "CollectInvalidSymbol": {
       "main": [
         [
           {
-            "node": "Code in JavaScript",
+            "node": "SendErrorMessage",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "HTTP Request": {
+    "LoopProcessValidSymbols": {
       "main": [
         [
           {
-            "node": "Basic LLM Chain",
+            "node": "Fetch1MinTimeSeries",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch15MinTimeSeries",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch1HourTimeSeries",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "FetchNewsArticles",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AddRateLimitWait1",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Code in JavaScript": {
+    "AddRateLimitWait1": {
       "main": [
         [
           {
-            "node": "Merge1",
+            "node": "LoopProcessValidSymbols",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "xAI Grok Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Basic LLM Chain",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "When chat message received": {
+    "ValidateSymbolTwelveData": {
       "main": [
         [
           {
-            "node": "Basic LLM Chain",
+            "node": "CheckSymbolAPIResult",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Basic LLM Chain": {
+    "MergeTimeSeriesData": {
       "main": [
         [
           {
-            "node": "Merge1",
+            "node": "AggregateDataIntervals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AggregateDataIntervals": {
+      "main": [
+        [
+          {
+            "node": "ComputeTechnicalIndicators",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ComputeTechnicalIndicators": {
+      "main": [
+        [
+          {
+            "node": "MergeSentimentResults",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AnalyzeNewsSentimentChain": {
+      "main": [
+        [
+          {
+            "node": "MergeSentimentResults",
             "type": "main",
             "index": 1
           }
         ]
       ]
     },
-    "Merge1": {
-      "main": [
-        [
-          {
-            "node": "Aggregate1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Aggregate1": {
-      "main": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "xAI Grok Chat Model1": {
+    "GrokSentimentModel": {
       "ai_languageModel": [
         [
           {
-            "node": "AI Agent",
+            "node": "AnalyzeNewsSentimentChain",
             "type": "ai_languageModel",
             "index": 0
           }
         ]
       ]
     },
-    "AI Agent": {
+    "MergeSentimentResults": {
       "main": [
         [
           {
-            "node": "Send a text message",
+            "node": "AggregateSentimentScores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AggregateSentimentScores": {
+      "main": [
+        [
+          {
+            "node": "GenerateTradeRecommendationAgent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GenerateTradeRecommendationAgent": {
+      "main": [
+        [
+          {
+            "node": "SendTradeRecommendation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GrokRecommendationModel": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "GenerateTradeRecommendationAgent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HandleIncomingChatMessage": {
+      "main": [
+        [
+          {
+            "node": "AnalyzeNewsSentimentChain",
             "type": "main",
             "index": 0
           }
@@ -528,9 +1009,11 @@
   "active": false,
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "7690ae0a-4bb1-4ff9-b218-63f11c56c428",
+  "versionId": "d25bd15f-8e9f-439d-8cec-55686b0b3393",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "e528253e88e4586541d2eb06c1ec5fdac21c84cfb5afc416ee840c43e0960980"
