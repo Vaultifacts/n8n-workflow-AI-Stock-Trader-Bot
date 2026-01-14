@@ -12,7 +12,7 @@
       "typeVersion": 1.2,
       "position": [
         -1088,
-        656
+        368
       ],
       "id": "ee944ce7-c880-4fb6-b5f1-a0bbf38a8c3e",
       "name": "TelegramInputTrigger",
@@ -31,8 +31,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -640,
-        656
+        -432,
+        368
       ],
       "id": "c44ea853-4c02-4f75-99ae-ce7fa38a80e9",
       "name": "NormalizeInputText"
@@ -44,8 +44,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -416,
-        656
+        -208,
+        368
       ],
       "id": "7991cb42-1101-4982-8688-12077c00a1dc",
       "name": "ParseSymbolsToArray"
@@ -57,8 +57,8 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        -192,
-        656
+        16,
+        368
       ],
       "id": "e5c5bc2f-fbf7-48ae-b629-12f1cdef083b",
       "name": "LoopValidateSymbols",
@@ -92,8 +92,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        32,
-        608
+        240,
+        208
       ],
       "id": "03fb5f7c-89a9-41e0-b630-ec4eda5b0825",
       "name": "CheckSymbolRegex"
@@ -126,8 +126,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        704,
-        432
+        912,
+        48
       ],
       "id": "3a83cf7a-e45c-4e91-8fd1-143207af141d",
       "name": "CheckSymbolAPIResult"
@@ -138,8 +138,8 @@
       "name": "AddRateLimitWait",
       "typeVersion": 1,
       "position": [
-        32,
-        800
+        240,
+        512
       ],
       "id": "56c78d1c-43e0-4586-9ee9-74137d204299"
     },
@@ -148,8 +148,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        928,
-        384
+        1584,
+        112
       ],
       "id": "23aa3d12-fc66-4161-96a7-7216300cbf65",
       "name": "MergeValidationResults"
@@ -163,8 +163,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1520,
-        592
+        1360,
+        208
       ],
       "id": "ca8ea928-3eed-4445-9beb-189679976d0d",
       "name": "SendErrorMessage",
@@ -183,8 +183,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1152,
-        320
+        1808,
+        112
       ],
       "id": "76c29c83-58a7-41cd-a6b7-ff5e346808be",
       "name": "FormatValidSymbols"
@@ -199,7 +199,7 @@
           "parameters": [
             {
               "name": "symbol",
-              "value": "={{$json.validSymbols[0]}}"
+              "value": "={{$json.symbol}}"
             },
             {
               "name": "interval",
@@ -220,7 +220,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        2048,
+        2032,
         -144
       ],
       "id": "44b8434a-1cea-44d8-be23-c105d2b7331e",
@@ -242,7 +242,7 @@
           "parameters": [
             {
               "name": "symbol",
-              "value": "={{$json.validSymbols[0]}}"
+              "value": "={{$json.symbol}}"
             },
             {
               "name": "interval",
@@ -263,7 +263,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        2048,
+        2032,
         48
       ],
       "id": "07adb778-4fcd-42a5-ac59-0472379738ef",
@@ -285,7 +285,7 @@
           "parameters": [
             {
               "name": "symbol",
-              "value": "={{$json.validSymbols[0]}}"
+              "value": "={{$json.symbol}}"
             },
             {
               "name": "interval",
@@ -306,8 +306,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        2048,
-        336
+        2032,
+        240
       ],
       "id": "bab7ba61-76f8-4630-b824-6816c3513945",
       "name": "Fetch1HourTimeSeries",
@@ -328,15 +328,11 @@
           "parameters": [
             {
               "name": "qInTitle",
-              "value": "={{ $json.validSymbols[0] }}"
+              "value": "={{$json.symbol}}"
             },
             {
               "name": "from",
               "value": "={{ new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }}"
-            },
-            {
-              "name": "apikey",
-              "value": "23bf725d79954f49b5dcbfce35f52cbe"
             },
             {
               "name": "language",
@@ -349,6 +345,14 @@
             {
               "name": "pageSize",
               "value": "5"
+            },
+            {
+              "name": "q",
+              "value": "={{$json.symbol}} +stock OR +earnings OR +market"
+            },
+            {
+              "name": "apikey",
+              "value": "=23bf725d79954f49b5dcbfce35f52cbe"
             }
           ]
         },
@@ -358,7 +362,7 @@
       "typeVersion": 4.3,
       "position": [
         2480,
-        368
+        384
       ],
       "id": "f4647b7f-86a4-40cd-b12a-7a1062aba507",
       "name": "FetchNewsArticles",
@@ -380,8 +384,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        928,
-        704
+        1136,
+        208
       ],
       "id": "4c27d041-c82f-47f3-9f41-dd58cee7afa3",
       "name": "CollectInvalidSymbol"
@@ -405,30 +409,17 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        256,
-        432
+        464,
+        48
       ],
       "id": "b139043d-d7f4-4f3b-aea5-e879fb2ce833",
       "name": "ValidateSymbolTwelveData",
       "credentials": {
         "httpQueryAuth": {
           "id": "srLxuSkG3qoi2f8B",
-          "name": "Query Auth account"
+          "name": "TwelveDataAPI"
         }
       }
-    },
-    {
-      "parameters": {
-        "numberInputs": 3
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        2480,
-        64
-      ],
-      "id": "e5910da5-66eb-44eb-b588-ef9c47a209a1",
-      "name": "MergeTimeSeriesData"
     },
     {
       "parameters": {
@@ -438,21 +429,21 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        2704,
-        80
+        3120,
+        48
       ],
       "id": "7ba9c8e8-d4dc-44e7-887e-f6627407e676",
       "name": "AggregateDataIntervals"
     },
     {
       "parameters": {
-        "jsCode": "// Get all input items (n8n passes data as 'items')\nconst items = $input.all();  // Use $input.all() for safety in n8n Code nodes\n\n// Defensive check: Ensure there is at least one item with json data\nif (items.length === 0 || !items[0].json) {\n  return [\n    {\n      json: {\n        error: 'No input data provided. Check upstream nodes (e.g., API request) for valid output.'\n      }\n    }\n  ];\n}\n\n// Extract root JSON from the first item\nconst root = items[0].json;\n\n// Defensive check: Ensure root.data exists and has at least 3 arrays\nif (!root.data || !Array.isArray(root.data) || root.data.length < 3) {\n  return [\n    {\n      json: {\n        error: 'Invalid data structure. Expected root.data to be an array with at least 3 timeframe datasets.'\n      }\n    }\n  ];\n}\n\n// Extract datasets with checks\nconst data1m = root.data[0] || {};  // Default to empty object if missing\nconst data15m = root.data[1] || {};\nconst data1h = root.data[2] || {};\n\n// Defensive check: Ensure data1m has meta and symbol (this prevents the TypeError)\nif (!data1m.meta || typeof data1m.meta.symbol === 'undefined') {\n  return [\n    {\n      json: {\n        error: 'Missing meta or symbol in 1min data. Verify API response from Twelve Data or upstream node.'\n      }\n    }\n  ];\n}\n\n// Standardize format function (unchanged, but add check inside for empty values)\nfunction normalize(values) {\n  if (!Array.isArray(values) || values.length === 0) {\n    return [];  // Return empty array if no values, to avoid errors in mapping\n  }\n  return values\n    .map(v => ({\n      time: new Date(v.datetime),\n      open: parseFloat(v.open),\n      high: parseFloat(v.high),\n      low: parseFloat(v.low),\n      close: parseFloat(v.close),\n      volume: parseFloat(v.volume),\n    }))\n    .sort((a, b) => a.time - b.time);\n}\n\n// Now safely process and return the output\nreturn [\n  {\n    json: {\n      ticker: data1m.meta.symbol,  // Safe now due to earlier check\n      candles1m: normalize(data1m.values),\n      candles15m: normalize(data15m.values),\n      candles1h: normalize(data1h.values),\n    }\n  }\n];"
+        "jsCode": "// Input: Nested array from upstream\n// Output: Per-symbol with sorted values, added sma20/rsi14\nfunction flattenDeep(arr) {\n  return arr.reduce((acc, val) => Array.isArray(val) ? acc.concat(flattenDeep(val)) : acc.concat(val), []);\n}\n\nconst items = $input.all();\nif (items.length === 0) {\n  return [{ json: { error: 'No data from upstream.' } }];\n}\n\nlet symbolData = items[0]?.json?.data?.[0]?.data || [];\nif (symbolData.length === 0) {\n  const allFlat = flattenDeep(items.map(item => item.json));\n  symbolData = allFlat.filter(item => item && item.symbol);\n}\nif (symbolData.length === 0) {\n  return [{ json: { error: 'No symbol data found.' } }];\n}\n\nconst formatted = symbolData.map(symbolItem => {\n  const symbol = symbolItem.symbol || 'Unknown';\n  const intervals = symbolItem.intervals || {};\n  const updatedIntervals = {};\n\n  for (const intervalKey in intervals) {\n    const intervalData = intervals[intervalKey] || {};\n    let values = intervalData.values || [];\n    if (values.length === 0) {\n      updatedIntervals[intervalKey] = { ...intervalData, values: [], error: 'No values.' };\n      continue;\n    }\n\n    values = values.sort((a, b) => new Date(a.datetime) - new Date(b.datetime));\n\n    const closes = values.map(c => parseFloat(c.close) || 0);\n\n    function calculateSMA(closes, period = 20) {\n      return closes.map((_, index) => {\n        if (index < period - 1) return null;\n        const slice = closes.slice(index - period + 1, index + 1);\n        const sum = slice.reduce((total, val) => total + val, 0);\n        return (sum / period).toFixed(2);\n      });\n    }\n    const smaValues = calculateSMA(closes);\n\n    function calculateRSI(closes, period = 14) {\n      if (closes.length < period) return new Array(closes.length).fill(null);\n\n      const changes = [];\n      for (let i = 1; i < closes.length; i++) {\n        changes.push(closes[i] - closes[i - 1]);\n      }\n\n      let avgGain = changes.slice(0, period).reduce((sum, ch) => sum + (ch > 0 ? ch : 0), 0) / period;\n      let avgLoss = Math.abs(changes.slice(0, period).reduce((sum, ch) => sum + (ch < 0 ? ch : 0), 0) / period);\n\n      const rsi = new Array(period - 1).fill(null);\n      if (avgLoss === 0) rsi.push(100);\n      else if (avgGain === 0) rsi.push(0);\n      else rsi.push((100 - (100 / (1 + (avgGain / avgLoss)))).toFixed(2));\n\n      for (let i = period; i < changes.length; i++) {\n        const currGain = changes[i] > 0 ? changes[i] : 0;\n        const currLoss = changes[i] < 0 ? Math.abs(changes[i]) : 0;\n        avgGain = (avgGain * (period - 1) + currGain) / period;\n        avgLoss = (avgLoss * (period - 1) + currLoss) / period;\n        if (avgLoss === 0) rsi.push(100);\n        else if (avgGain === 0) rsi.push(0);\n        else rsi.push((100 - (100 / (1 + (avgGain / avgLoss)))).toFixed(2));\n      }\n      return rsi;\n    }\n    const rsiValues = calculateRSI(closes);\n\n    const updatedValues = values.map((candle, index) => ({\n      ...candle,\n      sma20: smaValues[index],\n      rsi14: rsiValues[index]\n    }));\n\n    updatedIntervals[intervalKey] = { ...intervalData, values: updatedValues };\n  }\n\n  return {\n    json: {\n      symbol,\n      intervals: updatedIntervals,\n      news: symbolItem.news || {}\n    }\n  };\n});\n\nreturn formatted;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2992,
-        80
+        3408,
+        48
       ],
       "id": "f26c2700-627a-4c09-8597-21de6611042b",
       "name": "ComputeTechnicalIndicators"
@@ -460,12 +451,12 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=You are a highly intelligent and accurate sentiment analyzer specializing in the financial markets. Analyze the sentiment of the provided text\n\n- Evaluate the immediate market reaction, recent news impact, and technical volatility.\n- Determine a sentiment category: \"Positive\", \"Neutral\", or \"Negative\".\n- Calculate a numerical score between -1 (extremely negative) and 1 (extremely positive).\n- Provide a concise rationale explaining the short-term sentiment (give a detailed response with appropriate headlines for major events).\n\nYour output must be exactly a JSON object. The value must be an object with three keys: \"category\", \"score\", and \"rationale\". Do not output any additional text.\n\nFor example, your output should look like:\n\n{\n   \"shortTermSentiment\": {\n      \"category\": \"Positive\", \n      \"score\":0.7, \n      \"Rationale\": \"....\"\n\nNow, analyze the following text and produce your JSON output: {{ JSON.stringify($json.articles) }}",
+        "text": "=You are a highly intelligent and accurate sentiment analyzer specializing in the financial markets. Analyze the sentiment of the provided news articles for the stock symbol(s) mentioned.\n\n- Evaluate the immediate market reaction, recent news impact, and technical volatility based on all articles.\n- Aggregate sentiments if multiple articles: Weigh recent/major events more heavily.\n- Determine an overall sentiment category: \"Positive\", \"Neutral\", or \"Negative\".\n- Calculate a numerical score between -1 (extremely negative) and 1 (extremely positive), averaging across articles.\n- Provide a concise rationale explaining the short-term sentiment (detailed, with headlines for major events; 2-4 sentences).\n\nIf no articles or irrelevant content: Use category \"Neutral\", score 0, rationale \"No relevant news found.\"\n\nYour output must be exactly a JSON object wrapped in \"shortTermSentiment\", with three keys: \"category\", \"score\", and \"rationale\". Do not output any additional text or explanations.\n\nExample output:\n{\n  \"shortTermSentiment\": {\n    \"category\": \"Positive\",\n    \"score\": 0.7,\n    \"rationale\": \"Tesla's strong earnings beat led to a 10% surge, indicating positive market reaction despite volatility. Headline: 'TSLA Earnings Smash Expectations'.\"\n  }\n}\n\nNow, analyze the following articles and produce your JSON output: {{ JSON.stringify($json.articles) }}",
         "hasOutputParser": true,
         "messages": {
           "messageValues": [
             {
-              "message": "=You are a highly intelligent and accurate sentiment analyzer specializing in the financial markets. Analyze the sentiment of the provided text\n\n- Evaluate the immediate market reaction, recent news impact, and technical volatility.\n- Determine a sentiment category: \"Positive\", \"Neutral\", or \"Negative\".\n- Calculate a numerical score between -1 (extremely negative) and 1 (extremely positive).\n- Provide a concise rationale explaining the short-term sentiment (give a detailed response with appropriate headlines for major events).\n\nYour output must be exactly a JSON object. The value must be an object with three keys: \"category\", \"score\", and \"rationale\". Do not output any additional text.\n\nFor example, your output should look like:\n\n{\n   \"shortTermSentiment\": {\"category\": \"Positive\", \"score\":0.7, \"Rationale\": \"....\"\n\nNow, analyze the following text and produce your JSON output: {{ JSON.stringify($json.articles) }}"
+              "message": "=You are a highly intelligent and accurate sentiment analyzer specializing in the financial markets. Analyze the sentiment of the provided news articles for the stock symbol(s) mentioned.\n\n- Evaluate the immediate market reaction, recent news impact, and technical volatility based on all articles.\n- Aggregate sentiments if multiple articles: Weigh recent/major events more heavily.\n- Determine an overall sentiment category: \"Positive\", \"Neutral\", or \"Negative\".\n- Calculate a numerical score between -1 (extremely negative) and 1 (extremely positive), averaging across articles.\n- Provide a concise rationale explaining the short-term sentiment (detailed, with headlines for major events; 2-4 sentences).\n\nIf no articles or irrelevant content: Use category \"Neutral\", score 0, rationale \"No relevant news found.\"\n\nYour output must be exactly a JSON object wrapped in \"shortTermSentiment\", with three keys: \"category\", \"score\", and \"rationale\". Do not output any additional text or explanations.\n\nExample output:\n{\n  \"shortTermSentiment\": {\n    \"category\": \"Positive\",\n    \"score\": 0.7,\n    \"rationale\": \"Tesla's strong earnings beat led to a 10% surge, indicating positive market reaction despite volatility. Headline: 'TSLA Earnings Smash Expectations'.\"\n  }\n}\n\nNow, analyze the following articles and produce your JSON output: {{ JSON.stringify($json.articles) }}"
             }
           ]
         },
@@ -475,7 +466,7 @@
       "typeVersion": 1.9,
       "position": [
         2928,
-        384
+        480
       ],
       "id": "08af3dc7-d832-427c-8f21-eef0de6b403b",
       "name": "AnalyzeNewsSentimentChain"
@@ -483,13 +474,16 @@
     {
       "parameters": {
         "model": "grok-3-mini",
-        "options": {}
+        "options": {
+          "maxTokens": 300,
+          "temperature": 0.3
+        }
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
       "typeVersion": 1,
       "position": [
         3008,
-        608
+        704
       ],
       "id": "554924eb-c979-4ddc-8539-49ca41e1fc3a",
       "name": "GrokSentimentModel",
@@ -505,8 +499,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        3488,
-        128
+        3696,
+        320
       ],
       "id": "a380b1a7-36a3-4cf0-a087-328939433798",
       "name": "MergeSentimentResults"
@@ -519,8 +513,8 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        3712,
-        128
+        4128,
+        320
       ],
       "id": "1962b459-4565-4451-84c2-7baa28b136e2",
       "name": "AggregateSentimentScores"
@@ -536,8 +530,8 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        3936,
-        128
+        4352,
+        320
       ],
       "id": "aaae121d-601b-4cba-8a99-9e96657d7e3d",
       "name": "GenerateTradeRecommendationAgent"
@@ -550,8 +544,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
       "typeVersion": 1,
       "position": [
-        4016,
-        352
+        4432,
+        544
       ],
       "id": "1911db9c-dce1-4ce1-9dbf-e2c0f0c79069",
       "name": "GrokRecommendationModel",
@@ -564,15 +558,15 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('TelegramInputTrigger').item.json.message.chat.id }}",
+        "chatId": "=8511306269",
         "text": "={{$json.output}}",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        4288,
-        128
+        4704,
+        320
       ],
       "id": "fbac985f-c858-4956-b418-a83ae4240650",
       "name": "SendTradeRecommendation",
@@ -592,7 +586,7 @@
       "typeVersion": 1.4,
       "position": [
         2496,
-        560
+        576
       ],
       "id": "cf6de127-2578-4504-8e0d-60869941ec37",
       "name": "HandleIncomingChatMessage",
@@ -616,8 +610,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        32,
-        384
+        240,
+        -16
       ],
       "id": "e3552212-5e5f-4df8-a9de-df62d8e82f54",
       "name": "PreserveSymbol"
@@ -649,8 +643,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -864,
-        576
+        -656,
+        288
       ],
       "id": "2e56eafb-f70a-4abd-a6e3-1179b4ffa8a0",
       "name": "FilterBotMessages"
@@ -662,8 +656,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        480,
-        432
+        688,
+        48
       ],
       "id": "d2a1863b-7b9c-4005-a00c-28e9abf739d0",
       "name": "RateLimitWait",
@@ -676,7 +670,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        2464,
+        2256,
         -144
       ],
       "id": "186d7c11-52ff-44a0-8dcf-44849400e9e5",
@@ -705,7 +699,7 @@
       "typeVersion": 1.1,
       "position": [
         2256,
-        336
+        240
       ],
       "id": "59cbc95b-5485-4f07-b627-69b723834efe",
       "name": "RateLimit1Hr",
@@ -719,11 +713,105 @@
       "typeVersion": 1.1,
       "position": [
         2704,
-        368
+        384
       ],
       "id": "6c0d75b0-a9ff-4d45-b825-9d180ebe56bd",
       "name": "RateLimitNews",
       "webhookId": "2f0e746f-6175-401d-b06b-2c050ebeddb8"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2896,
+        32
+      ],
+      "id": "a4c443b4-8572-4424-b471-19da8e823e74",
+      "name": "AggregateTimeSeries"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3904,
+        320
+      ],
+      "id": "8c85ef28-a63b-4df8-9f85-4488f0b1b7da",
+      "name": "AggregateSentiments"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "33b12192-c967-4f2a-97c6-7dfa02ba3a31",
+              "name": "chatId",
+              "value": "={{$json.message.chat.id}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -880,
+        368
+      ],
+      "id": "64fc15a3-ee3f-4499-8168-0702118d0197",
+      "name": "PreserveChatId"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input: Object with validSymbols array (e.g., from FormatValidSymbols)\n// Output: Array of individual symbol objects (e.g., [{symbol: \"TSLA\"}, {symbol: \"AAPL\"}])\n// Dependencies: None (native JS). This is a fallback for loop splitting.\n\nconst input = $input.first().json;\nconst symbols = input.validSymbols || [];  // Get array or empty if missing\n\nif (symbols.length === 0) {\n  return [{ json: { error: 'No valid symbols found. Check upstream validation.' } }];\n}\n\n// Map to individual items\nreturn symbols.map(symbol => ({ json: { symbol: symbol.trim().toUpperCase() } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1808,
+        -16
+      ],
+      "id": "cc6f8010-d2aa-42c3-9620-edd948d3bf60",
+      "name": "ManualSymbolSplit"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 4,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2480,
+        32
+      ],
+      "id": "e5910da5-66eb-44eb-b588-ef9c47a209a1",
+      "name": "MergeFetchResults"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input: Merged array of time series and news for symbols (e.g., [ {meta:..., values:..., articles:...}, {meta:..., values:..., articles:...} ])\n// Output: Structured array per symbol, e.g., [{symbol: \"TSLA\", intervals: {1h: {values: [...]}}, news: {articles: [...]}}]\n// Why: Handles current input without labels; beginner-friendly with error checks.\n\nconst items = $input.all();  // Get all merged items (one per symbol)\n\nif (items.length === 0) {\n  return [{ json: { error: 'No merged data. Check fetch nodes.' } }];\n}\n\nconst formatted = items.map(item => {\n  const data = item.json;\n\n  // Extract symbol from meta (fallback if missing)\n  const symbol = data.meta?.symbol || 'Unknown';\n\n  // Assume this is 1h interval; adjust if multiple intervals (e.g., add time1min if labeled)\n  const intervals = {\n    '1h': {\n      meta: data.meta || {},\n      values: data.values || [],\n      status: data.status || 'unknown'\n    }\n  };\n\n  // News articles (fallback empty if missing)\n  const news = {\n    totalResults: data.totalResults || 0,\n    articles: data.articles || []\n  };\n\n  return {\n    json: {\n      symbol,\n      intervals,\n      news\n    }\n  };\n});\n\nreturn formatted;  // Output array for aggregate/indicators"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2688,
+        32
+      ],
+      "id": "203dcd07-905d-42a6-aabf-8d8b8213ea9f",
+      "name": "CleanMergedData"
     }
   ],
   "pinData": {},
@@ -737,7 +825,7 @@
             "index": 0
           },
           {
-            "node": "NormalizeInputText",
+            "node": "PreserveChatId",
             "type": "main",
             "index": 0
           }
@@ -862,22 +950,7 @@
       "main": [
         [
           {
-            "node": "Fetch1MinTimeSeries",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Fetch15MinTimeSeries",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Fetch1HourTimeSeries",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "FetchNewsArticles",
+            "node": "ManualSymbolSplit",
             "type": "main",
             "index": 0
           }
@@ -924,6 +997,11 @@
             "node": "RateLimitNews",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "MergeFetchResults",
+            "type": "main",
+            "index": 3
           }
         ]
       ]
@@ -944,17 +1022,6 @@
         [
           {
             "node": "RateLimitWait",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "MergeTimeSeriesData": {
-      "main": [
-        [
-          {
-            "node": "AggregateDataIntervals",
             "type": "main",
             "index": 0
           }
@@ -1009,7 +1076,7 @@
       "main": [
         [
           {
-            "node": "AggregateSentimentScores",
+            "node": "AggregateSentiments",
             "type": "main",
             "index": 0
           }
@@ -1098,7 +1165,7 @@
       "main": [
         [
           {
-            "node": "MergeTimeSeriesData",
+            "node": "MergeFetchResults",
             "type": "main",
             "index": 0
           }
@@ -1109,7 +1176,7 @@
       "main": [
         [
           {
-            "node": "MergeTimeSeriesData",
+            "node": "MergeFetchResults",
             "type": "main",
             "index": 1
           }
@@ -1120,7 +1187,7 @@
       "main": [
         [
           {
-            "node": "MergeTimeSeriesData",
+            "node": "MergeFetchResults",
             "type": "main",
             "index": 2
           }
@@ -1137,6 +1204,87 @@
           }
         ]
       ]
+    },
+    "AggregateTimeSeries": {
+      "main": [
+        [
+          {
+            "node": "AggregateDataIntervals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AggregateSentiments": {
+      "main": [
+        [
+          {
+            "node": "AggregateSentimentScores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PreserveChatId": {
+      "main": [
+        [
+          {
+            "node": "NormalizeInputText",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ManualSymbolSplit": {
+      "main": [
+        [
+          {
+            "node": "Fetch15MinTimeSeries",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch1MinTimeSeries",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch1HourTimeSeries",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "FetchNewsArticles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MergeFetchResults": {
+      "main": [
+        [
+          {
+            "node": "CleanMergedData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CleanMergedData": {
+      "main": [
+        [
+          {
+            "node": "AggregateTimeSeries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -1146,7 +1294,7 @@
     "timeSavedMode": "fixed",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "ba26a305-c666-4334-9e75-ea1182931589",
+  "versionId": "fc003c9e-586d-40f8-9512-59fe5f729114",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "e528253e88e4586541d2eb06c1ec5fdac21c84cfb5afc416ee840c43e0960980"
